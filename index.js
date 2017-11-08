@@ -1,10 +1,42 @@
+const RtmClient = require('@slack/client').RtmClient
+const WebClient = require('@slack/client').WebClient
+const CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS
+const RTM_EVENTS = require('@slack/client').RTM_EVENTS
+
+const BOT_TOKEN = process.env.SLACK_BOT_TOKEN || ''
+
 module.exports = (robot) => {
-  // Your plugin code here
-  console.log('Yay, the plugin was loaded!');
-  
-  // For more information on building plugins:
-  // https://github.com/probot/probot/blob/master/docs/plugins.md
-  
-  // To get your plugin running against GitHub, see:
-  // https://github.com/probot/probot/blob/master/docs/development.md
+  if (!BOT_TOKEN) {
+    robot.log.error('SLACK_BOT_TOKEN missing, skipping Slack integration')
+    return
+  }
+
+  robot.log.trace('Slack connecting...')
+
+  // game start!
+  const SlackAPI = new RtmClient(BOT_TOKEN)
+  const SlackWebAPI = new WebClient(BOT_TOKEN)
+
+  // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
+  SlackAPI.on(CLIENT_EVENTS.RTM.AUTHENTICATED, () => {
+    robot.log.trace('Slack successfully authenticated')
+  })
+
+  // you need to wait for the client to fully connect before you can send messages
+  SlackAPI.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+    robot.log.trace('Slack connected')
+  })
+
+  // events
+  SlackAPI.on(RTM_EVENTS.MESSAGE, () => {
+    const event = {
+      event: 'slack',
+      payload: { action: 'message' }
+    }
+
+    robot.receive(event)
+  })
+
+  // now connect
+  SlackAPI.connect('https://slack.com/api/rtm.connect');
 };

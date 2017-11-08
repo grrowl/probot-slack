@@ -1,16 +1,17 @@
 {
   "name": "probot-slack",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "author": "Tom McKenzie <tom@chillidonut.com> (https://github.com/grrowl)",
   "license": "ISC",
-  "repository": "https://github.com/grrowl/probot-plugin-slack.git",
+  "repository": "https://github.com/grrowl/probot-slack.git",
   "scripts": {
     "start": "probot run ./index.js",
     "test": "mocha && xo --extend probot"
   },
   "dependencies": {
-    "probot": "^0.7.2"
+    "@slack/client": "^3.14.1",
+    "probot": "^3.0.2"
   },
   "devDependencies": {
     "eslint-config-probot": ">=0.1.0",
