@@ -25,7 +25,7 @@ module.exports = (robot) => {
 
   // you need to wait for the client to fully connect before you can send messages
   SlackAPI.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
-    robot.log.trace('Slack connected')
+    robot.log.info('Slack connected')
   })
 
   // events
