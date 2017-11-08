@@ -18,8 +18,9 @@ module.exports = (robot) => {
   const SlackWebAPI = new WebClient(BOT_TOKEN)
 
   // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
-  SlackAPI.on(CLIENT_EVENTS.RTM.AUTHENTICATED, () => {
+  SlackAPI.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
     robot.log.trace('Slack successfully authenticated')
+    // SlackAPI.dataStore is now available
   })
 
   // you need to wait for the client to fully connect before you can send messages
@@ -28,10 +29,16 @@ module.exports = (robot) => {
   })
 
   // events
-  SlackAPI.on(RTM_EVENTS.MESSAGE, () => {
+  SlackAPI.on(RTM_EVENTS.MESSAGE, (message) => {
     const event = {
       event: 'slack',
-      payload: { action: 'message' }
+      payload: {
+        action: 'message',
+        message,
+        sender: SlackAPI.dataStore.getUserById(message.user),
+        slack: SlackAPI,
+        slackWeb: SlackWebAPI,
+      }
     }
 
     robot.receive(event)
