@@ -11,6 +11,17 @@ module.exports = (robot) => {
     return
   }
 
+  function emit(payload) {
+    robot.receive({
+      event: 'slack',
+      payload: {
+        ...payload,
+        slack: SlackAPI,
+        slackWeb: SlackWebAPI,
+      }
+    })
+  }
+
   robot.log.trace('Slack connecting...')
 
   // game start!
@@ -20,29 +31,31 @@ module.exports = (robot) => {
   // The client will emit an RTM.AUTHENTICATED event on successful connection, with the `rtm.start` payload
   SlackAPI.on(CLIENT_EVENTS.RTM.AUTHENTICATED, (rtmStartData) => {
     robot.log.trace('Slack successfully authenticated')
-    // SlackAPI.dataStore is now available
+
+    emit({
+      action: 'authenticated',
+      payload: rtmStartData,
+    })
   })
 
   // you need to wait for the client to fully connect before you can send messages
   SlackAPI.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
     robot.log.info('Slack connected')
+
+    emit({
+      action: 'connected',
+    })
   })
 
-  // events
-  SlackAPI.on(RTM_EVENTS.MESSAGE, (message) => {
-    const event = {
-      event: 'slack',
-      payload: {
-        action: 'message',
-        message,
-        sender: SlackAPI.dataStore.getUserById(message.user),
-        slack: SlackAPI,
-        slackWeb: SlackWebAPI,
-      }
-    }
-
-    robot.receive(event)
-  })
+  // bind to all supported events <https://api.slack.com/events>
+  for (const event of RTM_EVENTS) {
+    SlackAPI.on(event, (payload) => {
+      emit({
+        action: event,
+        payload,
+      })
+    })
+  }
 
   // now connect
   SlackAPI.connect('https://slack.com/api/rtm.connect');
